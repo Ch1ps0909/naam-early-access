@@ -139,11 +139,15 @@
     const [, country, code] = COUNTRIES.find((c) => c[0] === cc.value);
     const phone = form.phone.value.trim();
     join.disabled = true; join.textContent = "SENDING…"; error.textContent = "";
+    // Form-encoded body keeps this a "simple" request, so the browser skips the extra CORS round trip.
+    const timeout = new AbortController(), timer = setTimeout(() => timeout.abort(), 45000);
+    const slow = setTimeout(() => { join.textContent = "STILL SENDING, ONE MOMENT…"; }, 8000);
     try {
       const res = await fetch(`https://formsubmit.co/ajax/${INBOX}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
+        headers: { Accept: "application/json" },
+        signal: timeout.signal,
+        body: new URLSearchParams({
           Email: form.email.value.trim(),
           Phone: phone ? `+${code} ${phone}` : "(not given)",
           Country: country,
@@ -159,6 +163,7 @@
       error.textContent = "Something went wrong. Please try again in a moment.";
       console.error("Sign-up failed:", err);
     } finally {
+      clearTimeout(timer); clearTimeout(slow);
       join.disabled = false; join.textContent = "JOIN THE LIST";
     }
   });
