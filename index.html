@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAAM — Early access</title>
+<style>
+  :root {
+    --cherry: #7E0C1C;
+    --cherry-deep: #4A0710;
+    --cream: #F1EDE6;
+    --ink: #111;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    display: flex; flex-direction: column; min-height: 100vh;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--cherry-deep); color: #fff;
+  }
+
+  /* White top bar with the wordmark, like the original */
+  header {
+    background: #fff; color: var(--ink);
+    height: 64px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo { font-weight: 500; font-size: 26px; letter-spacing: .32em; margin-right: -.32em; color: var(--cherry); text-decoration: none; }
+
+  /* Full-bleed background: tiled NAAM type instead of a photo, darkened */
+  main { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 16px; overflow: hidden; }
+  .bg {
+    position: absolute; inset: -30%;
+    background-color: var(--cherry);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='760' height='300'%3E%3Ctext x='0' y='200' font-family='Helvetica Neue,Helvetica,Arial,sans-serif' font-weight='500' font-size='200' letter-spacing='34' fill='%23ffffff' fill-opacity='0.09'%3ENAAM%3C/text%3E%3C/svg%3E");
+    background-size: 760px 300px;
+    transform: rotate(-14deg);
+    filter: blur(1.5px);
+  }
+  @media (max-width: 600px) { .bg { background-size: 400px 158px; } }
+  .shade { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, rgba(0,0,0,.25), rgba(0,0,0,.6)); }
+
+  .card { position: relative; width: 100%; max-width: 560px; }
+  h1 { margin: 0 0 14px; font-size: clamp(26px, 5vw, 34px); font-weight: 700; letter-spacing: -.01em; line-height: 1.05; }
+  .sub { margin: 0 0 26px; font-size: 14px; font-style: italic; opacity: .9; }
+
+  .field {
+    display: flex; align-items: center; width: 100%; height: 50px; margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,.55); background: rgba(255,255,255,.04);
+    transition: border-color .15s;
+  }
+  .field:focus-within { border-color: #fff; }
+  .field input, .field select {
+    height: 100%; border: 0; background: transparent; color: #fff; font: inherit; font-size: 16px; outline: none;
+  }
+  .field input { flex: 1; min-width: 0; padding: 0 14px; }
+  .field input::placeholder { color: rgba(255,255,255,.75); }
+  /* Country code: the closed field shows just flag + code; the invisible select on top opens the full list */
+  .cc { position: relative; height: 100%; display: flex; align-items: center; gap: 6px; padding: 0 6px 0 12px; font-size: 16px; white-space: nowrap; }
+  .cc::after { content: ""; width: 7px; height: 7px; margin: -4px 0 0 4px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg); opacity: .8; }
+  .cc select { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: pointer; }
+  .field select option { color: var(--ink); }
+
+  .consent { margin: 4px 0 22px; font-size: 11px; line-height: 1.55; text-align: center; opacity: .85; }
+  .consent a { color: inherit; }
+
+  button {
+    width: 100%; height: 50px; border: 0; cursor: pointer;
+    background: var(--cream); color: #555; font: inherit; font-size: 15px; font-weight: 500; letter-spacing: .04em;
+    transition: background .15s, color .15s;
+  }
+  button:hover { background: #fff; color: var(--cherry); }
+
+  button:disabled { opacity: .7; cursor: wait; }
+  .error { margin: 12px 0 0; min-height: 1em; font-size: 13px; text-align: center; color: #FFD3D9; }
+
+  .thanks { display: none; text-align: center; }
+  .thanks p { margin: 0; opacity: .9; }
+  .done form, .done .intro { display: none; }
+  .done .thanks { display: block; }
+
+  footer { background: #fff; color: var(--ink); text-align: center; font-size: 12px; letter-spacing: .08em; padding: 14px; }
+</style>
+</head>
+<body>
+<header><a class="logo" href="#">NAAM</a></header>
+
+<main>
+  <div class="bg" aria-hidden="true"></div>
+  <div class="shade" aria-hidden="true"></div>
+
+  <div class="card" id="card">
+    <div class="intro">
+      <h1>SIGN UP FOR EARLY ACCESS</h1>
+      <p class="sub">Be the first to shop. Our first activewear collection drops soon.</p>
+    </div>
+
+    <form id="signup">
+      <label class="field"><input type="email" name="email" placeholder="Email" required autocomplete="email"></label>
+      <label class="field">
+        <span class="cc"><span id="cc-shown">🇹🇭 +66</span><select name="country" id="cc" aria-label="Country code"></select></span>
+        <input type="tel" name="phone" placeholder="Mobile number" autocomplete="tel-national">
+      </label>
+      <p class="consent">NAAM will email or text you about the launch and new drops. A few messages a month, and you can opt out any time using the link in any message. See our <a href="#">Privacy Policy</a> and <a href="#">Terms of Service</a>.</p>
+      <!-- Spam trap: people never see or fill this, bots do -->
+      <input type="text" name="_honey" tabindex="-1" autocomplete="off" style="display:none">
+      <button type="submit" id="join">JOIN THE LIST</button>
+      <p class="error" id="error" role="alert"></p>
+    </form>
+
+    <div class="thanks">
+      <h1>YOU'RE ON THE LIST</h1>
+      <p>We'll let you know the moment NAAM drops.</p>
+    </div>
+  </div>
+</main>
+
+<footer>© 2026 NAAM.</footer>
+
+<script>
+  // Every country / territory with its calling code (ISO code | name | code). Thailand is the default.
+  const COUNTRIES = `AF|Afghanistan|93;AX|Åland Islands|358;AL|Albania|355;DZ|Algeria|213;AS|American Samoa|1;AD|Andorra|376;AO|Angola|244;AI|Anguilla|1;AG|Antigua and Barbuda|1;AR|Argentina|54;AM|Armenia|374;AW|Aruba|297;AC|Ascension Island|247;AU|Australia|61;AT|Austria|43;AZ|Azerbaijan|994;BS|Bahamas|1;BH|Bahrain|973;BD|Bangladesh|880;BB|Barbados|1;BY|Belarus|375;BE|Belgium|32;BZ|Belize|501;BJ|Benin|229;BM|Bermuda|1;BT|Bhutan|975;BO|Bolivia|591;BQ|Caribbean Netherlands|599;BA|Bosnia and Herzegovina|387;BW|Botswana|267;BR|Brazil|55;IO|British Indian Ocean Territory|246;VG|British Virgin Islands|1;BN|Brunei|673;BG|Bulgaria|359;BF|Burkina Faso|226;BI|Burundi|257;KH|Cambodia|855;CM|Cameroon|237;CA|Canada|1;CV|Cape Verde|238;KY|Cayman Islands|1;CF|Central African Republic|236;TD|Chad|235;CL|Chile|56;CN|China|86;CX|Christmas Island|61;CC|Cocos (Keeling) Islands|61;CO|Colombia|57;KM|Comoros|269;CG|Congo - Brazzaville|242;CD|Congo - Kinshasa|243;CK|Cook Islands|682;CR|Costa Rica|506;CI|Côte d’Ivoire|225;HR|Croatia|385;CU|Cuba|53;CW|Curaçao|599;CY|Cyprus|357;CZ|Czechia|420;DK|Denmark|45;DJ|Djibouti|253;DM|Dominica|1;DO|Dominican Republic|1;EC|Ecuador|593;EG|Egypt|20;SV|El Salvador|503;GQ|Equatorial Guinea|240;ER|Eritrea|291;EE|Estonia|372;SZ|Eswatini|268;ET|Ethiopia|251;FK|Falkland Islands|500;FO|Faroe Islands|298;FJ|Fiji|679;FI|Finland|358;FR|France|33;GF|French Guiana|594;PF|French Polynesia|689;GA|Gabon|241;GM|Gambia|220;GE|Georgia|995;DE|Germany|49;GH|Ghana|233;GI|Gibraltar|350;GR|Greece|30;GL|Greenland|299;GD|Grenada|1;GP|Guadeloupe|590;GU|Guam|1;GT|Guatemala|502;GG|Guernsey|44;GN|Guinea|224;GW|Guinea-Bissau|245;GY|Guyana|592;HT|Haiti|509;HN|Honduras|504;HK|Hong Kong|852;HU|Hungary|36;IS|Iceland|354;IN|India|91;ID|Indonesia|62;IR|Iran|98;IQ|Iraq|964;IE|Ireland|353;IM|Isle of Man|44;IL|Israel|972;IT|Italy|39;JM|Jamaica|1;JP|Japan|81;JE|Jersey|44;JO|Jordan|962;KZ|Kazakhstan|7;KE|Kenya|254;KI|Kiribati|686;XK|Kosovo|383;KW|Kuwait|965;KG|Kyrgyzstan|996;LA|Laos|856;LV|Latvia|371;LB|Lebanon|961;LS|Lesotho|266;LR|Liberia|231;LY|Libya|218;LI|Liechtenstein|423;LT|Lithuania|370;LU|Luxembourg|352;MO|Macao|853;MG|Madagascar|261;MW|Malawi|265;MY|Malaysia|60;MV|Maldives|960;ML|Mali|223;MT|Malta|356;MH|Marshall Islands|692;MQ|Martinique|596;MR|Mauritania|222;MU|Mauritius|230;YT|Mayotte|262;MX|Mexico|52;FM|Micronesia|691;MD|Moldova|373;MC|Monaco|377;MN|Mongolia|976;ME|Montenegro|382;MS|Montserrat|1;MA|Morocco|212;MZ|Mozambique|258;MM|Myanmar|95;NA|Namibia|264;NR|Nauru|674;NP|Nepal|977;NL|Netherlands|31;NC|New Caledonia|687;NZ|New Zealand|64;NI|Nicaragua|505;NE|Niger|227;NG|Nigeria|234;NU|Niue|683;NF|Norfolk Island|672;KP|North Korea|850;MK|North Macedonia|389;MP|Northern Mariana Islands|1;NO|Norway|47;OM|Oman|968;PK|Pakistan|92;PW|Palau|680;PS|Palestine|970;PA|Panama|507;PG|Papua New Guinea|675;PY|Paraguay|595;PE|Peru|51;PH|Philippines|63;PL|Poland|48;PT|Portugal|351;PR|Puerto Rico|1;QA|Qatar|974;RE|Réunion|262;RO|Romania|40;RU|Russia|7;RW|Rwanda|250;WS|Samoa|685;SM|San Marino|378;ST|São Tomé and Príncipe|239;SA|Saudi Arabia|966;SN|Senegal|221;RS|Serbia|381;SC|Seychelles|248;SL|Sierra Leone|232;SG|Singapore|65;SX|Sint Maarten|1;SK|Slovakia|421;SI|Slovenia|386;SB|Solomon Islands|677;SO|Somalia|252;ZA|South Africa|27;KR|South Korea|82;SS|South Sudan|211;ES|Spain|34;LK|Sri Lanka|94;BL|St. Barthélemy|590;SH|St. Helena|290;KN|St. Kitts and Nevis|1;LC|St. Lucia|1;MF|St. Martin|590;PM|St. Pierre and Miquelon|508;VC|St. Vincent and the Grenadines|1;SD|Sudan|249;SR|Suriname|597;SJ|Svalbard and Jan Mayen|47;SE|Sweden|46;CH|Switzerland|41;SY|Syria|963;TW|Taiwan|886;TJ|Tajikistan|992;TZ|Tanzania|255;TH|Thailand|66;TL|Timor-Leste|670;TG|Togo|228;TK|Tokelau|690;TO|Tonga|676;TT|Trinidad and Tobago|1;TA|Tristan da Cunha|290;TN|Tunisia|216;TR|Türkiye|90;TM|Turkmenistan|993;TC|Turks and Caicos Islands|1;TV|Tuvalu|688;VI|U.S. Virgin Islands|1;UG|Uganda|256;UA|Ukraine|380;AE|United Arab Emirates|971;GB|United Kingdom|44;US|United States|1;UY|Uruguay|598;UZ|Uzbekistan|998;VU|Vanuatu|678;VA|Vatican City|39;VE|Venezuela|58;VN|Vietnam|84;WF|Wallis and Futuna|681;EH|Western Sahara|212;YE|Yemen|967;ZM|Zambia|260;ZW|Zimbabwe|263`
+    .split(";").map((r) => r.split("|"));
+  const flag = (iso) => String.fromCodePoint(...[...iso].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+  const cc = document.getElementById("cc"), shown = document.getElementById("cc-shown");
+  cc.innerHTML = COUNTRIES.sort((a, b) => a[1].localeCompare(b[1]))
+    .map(([iso, name, code]) => `<option value="${iso}" ${iso === "TH" ? "selected" : ""}>${flag(iso)} ${name} (+${code})</option>`).join("");
+  cc.addEventListener("change", () => {
+    const [iso, , code] = COUNTRIES.find((c) => c[0] === cc.value);
+    shown.textContent = `${flag(iso)} +${code}`;
+  });
+
+  // Each sign-up is emailed to info@naamactive.com through FormSubmit (formsubmit.co).
+  // The very first submission makes FormSubmit send an activation email to that inbox; click it once.
+  const INBOX = "info@naamactive.com";
+  const form = document.getElementById("signup"), join = document.getElementById("join"), error = document.getElementById("error");
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (form._honey.value) return; // a bot filled the hidden field
+    const [, country, code] = COUNTRIES.find((c) => c[0] === cc.value);
+    const phone = form.phone.value.trim();
+    join.disabled = true; join.textContent = "SENDING…"; error.textContent = "";
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${INBOX}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          Email: form.email.value.trim(),
+          Phone: phone ? `+${code} ${phone}` : "(not given)",
+          Country: country,
+          _subject: "New NAAM early access sign-up",
+          _template: "table",
+          _replyto: form.email.value.trim(),
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || String(data.success) === "false") throw new Error(data.message || res.status);
+      document.getElementById("card").classList.add("done");
+    } catch (err) {
+      error.textContent = "Something went wrong. Please try again in a moment.";
+      console.error("Sign-up failed:", err);
+    } finally {
+      join.disabled = false; join.textContent = "JOIN THE LIST";
+    }
+  });
+</script>
+</body>
+</html>
