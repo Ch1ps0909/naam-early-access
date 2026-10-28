@@ -132,40 +132,31 @@
   // Each sign-up is emailed to info@naamactive.com through FormSubmit (formsubmit.co).
   // The very first submission makes FormSubmit send an activation email to that inbox; click it once.
   const INBOX = "info@naamactive.com";
-  const form = document.getElementById("signup"), join = document.getElementById("join"), error = document.getElementById("error");
-  form.addEventListener("submit", async (e) => {
+  const form = document.getElementById("signup"), error = document.getElementById("error");
+  // FormSubmit can take 30s+ to answer, so the visitor isn't kept waiting: the browser is handed the
+  // sign-up as a beacon (delivered in the background, even if the tab is closed) and "thanks" shows at once.
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (form._honey.value) return; // a bot filled the hidden field
     const [, country, code] = COUNTRIES.find((c) => c[0] === cc.value);
     const phone = form.phone.value.trim();
-    join.disabled = true; join.textContent = "SENDING…"; error.textContent = "";
-    // Form-encoded body keeps this a "simple" request, so the browser skips the extra CORS round trip.
-    const timeout = new AbortController(), timer = setTimeout(() => timeout.abort(), 45000);
-    const slow = setTimeout(() => { join.textContent = "STILL SENDING, ONE MOMENT…"; }, 8000);
-    try {
-      const res = await fetch(`https://formsubmit.co/ajax/${INBOX}`, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-        signal: timeout.signal,
-        body: new URLSearchParams({
-          Email: form.email.value.trim(),
-          Phone: phone ? `+${code} ${phone}` : "(not given)",
-          Country: country,
-          _subject: "New NAAM early access sign-up",
-          _template: "table",
-          _replyto: form.email.value.trim(),
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || String(data.success) === "false") throw new Error(data.message || res.status);
-      document.getElementById("card").classList.add("done");
-    } catch (err) {
-      error.textContent = "Something went wrong. Please try again in a moment.";
-      console.error("Sign-up failed:", err);
-    } finally {
-      clearTimeout(timer); clearTimeout(slow);
-      join.disabled = false; join.textContent = "JOIN THE LIST";
+    const url = `https://formsubmit.co/ajax/${INBOX}`;
+    const body = new URLSearchParams({
+      Email: form.email.value.trim(),
+      Phone: phone ? `+${code} ${phone}` : "(not given)",
+      Country: country,
+      _subject: "New NAAM early access sign-up",
+      _template: "table",
+      _replyto: form.email.value.trim(),
+    });
+    let queued = false;
+    try { queued = navigator.sendBeacon(url, body); } catch {}
+    if (!queued) {
+      // Older browsers without beacons: a keepalive request also outlives the page.
+      try { fetch(url, { method: "POST", body, mode: "no-cors", keepalive: true }); queued = true; } catch {}
     }
+    if (!queued) { error.textContent = "Something went wrong. Please try again in a moment."; return; }
+    document.getElementById("card").classList.add("done");
   });
 </script>
 </body>
