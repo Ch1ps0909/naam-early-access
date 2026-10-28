@@ -129,26 +129,29 @@
     shown.textContent = `${flag(iso)} +${code}`;
   });
 
-  // Each sign-up is emailed to info@naamactive.com through FormSubmit (formsubmit.co).
-  // The very first submission makes FormSubmit send an activation email to that inbox; click it once.
+  // Each sign-up is emailed to info@naamactive.com. With a Web3Forms access key (web3forms.com, issued to
+  // that inbox) it goes through Web3Forms, which delivers in seconds; without one it falls back to FormSubmit,
+  // which works but can take 30s+.
   const INBOX = "info@naamactive.com";
+  const WEB3FORMS_KEY = "65905c1a-a14e-405f-b8f7-717b238f075b";
   const form = document.getElementById("signup"), error = document.getElementById("error");
-  // FormSubmit can take 30s+ to answer, so the visitor isn't kept waiting: the browser is handed the
-  // sign-up as a beacon (delivered in the background, even if the tab is closed) and "thanks" shows at once.
+  // The visitor isn't kept waiting either way: the browser is handed the sign-up as a beacon
+  // (delivered in the background, even if the tab is closed) and "thanks" shows at once.
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     if (form._honey.value) return; // a bot filled the hidden field
     const [, country, code] = COUNTRIES.find((c) => c[0] === cc.value);
     const phone = form.phone.value.trim();
-    const url = `https://formsubmit.co/ajax/${INBOX}`;
-    const body = new URLSearchParams({
+    const fields = {
       Email: form.email.value.trim(),
       Phone: phone ? `+${code} ${phone}` : "(not given)",
       Country: country,
-      _subject: "New NAAM early access sign-up",
-      _template: "table",
-      _replyto: form.email.value.trim(),
-    });
+    };
+    const subject = "New NAAM early access sign-up";
+    const url = WEB3FORMS_KEY ? "https://api.web3forms.com/submit" : `https://formsubmit.co/ajax/${INBOX}`;
+    const body = new URLSearchParams(WEB3FORMS_KEY
+      ? { access_key: WEB3FORMS_KEY, subject, from_name: "NAAM early access", replyto: fields.Email, ...fields }
+      : { ...fields, _subject: subject, _template: "table", _replyto: fields.Email });
     let queued = false;
     try { queued = navigator.sendBeacon(url, body); } catch {}
     if (!queued) {
